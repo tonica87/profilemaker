@@ -1,910 +1,891 @@
-import React, { useState } from 'react';
-import { Copy, RefreshCw, Download, Upload } from 'lucide-react';
-
-const StudentProfileFormatter = () => {
-  const [formData, setFormData] = useState({
-    studentName: '',
-    trainingType: '',
-    instructor: '',
-    grade: '',
-    gradeOther: '',
-    schoolType: '出身校',
-    school: '',
-    subjects: '',
-    firstChoice: '',
-    secondChoice: '',
-    thirdChoice: '',
-    monthlyGoals: {
-      march: '',
-      april: '',
-      may: '',
-      june: '',
-      july: '',
-      august: '',
-      september: '',
-      october: '',
-      november: '',
-      december: '',
-      january: '',
-      february: ''
-    },
-    examResults: {
-      date: '',
-      examName: '',
-      subjects: [
-        { name: '英語', score: '', total: '', deviation: '' }
-      ],
-      other: ''
-    },
-    examSchedule: '',
-    studyTime: {
-      subjects: [
-        { name: '英語', hours: '' }
-      ]
-    },
-    wakeTime: '',
-    sleepTime: '',
-    schedule: ''
-  });
-
-  const [selectedSubject, setSelectedSubject] = useState('');
-  const [selectedStudySubject, setSelectedStudySubject] = useState('');
-  const [generatedText, setGeneratedText] = useState('');
-
-  const handleInputChange = (field, value) => {
-    if (field.includes('.')) {
-      const parts = field.split('.');
-      const parent = parts[0];
-      const child = parts[1];
-      if (parent === 'examResults' && (child === 'date' || child === 'examName' || child === 'other')) {
-        setFormData(prev => ({
-          ...prev,
-          examResults: {
-            ...prev.examResults,
-            [child]: value
-          }
-        }));
-      } else {
-        setFormData(prev => ({
-          ...prev,
-          [parent]: {
-            ...prev[parent],
-            [child]: value
-          }
-        }));
-      }
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [field]: value
-      }));
-    }
-  };
-
-  const handleSubjectChange = (index, field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      examResults: {
-        ...prev.examResults,
-        subjects: prev.examResults.subjects.map((subject, i) => 
-          i === index ? { ...subject, [field]: value } : subject
-        )
-      }
-    }));
-  };
-
-  const addSubject = () => {
-    if (selectedSubject.trim() && !formData.examResults.subjects.find(s => s.name === selectedSubject.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        examResults: {
-          ...prev.examResults,
-          subjects: [...prev.examResults.subjects, { name: selectedSubject.trim(), score: '', total: '', deviation: '' }]
-        }
-      }));
-      setSelectedSubject('');
-    }
-  };
-
-  const removeSubject = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      examResults: {
-        ...prev.examResults,
-        subjects: prev.examResults.subjects.filter((_, i) => i !== index)
-      }
-    }));
-  };
-
-  const handleStudyTimeChange = (index, field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      studyTime: {
-        ...prev.studyTime,
-        subjects: prev.studyTime.subjects.map((subject, i) => 
-          i === index ? { ...subject, [field]: value } : subject
-        )
-      }
-    }));
-  };
-
-  const addStudySubject = () => {
-    if (selectedStudySubject.trim() && !formData.studyTime.subjects.find(s => s.name === selectedStudySubject.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        studyTime: {
-          ...prev.studyTime,
-          subjects: [...prev.studyTime.subjects, { name: selectedStudySubject.trim(), hours: '' }]
-        }
-      }));
-      setSelectedStudySubject('');
-    }
-  };
-
-  const removeStudySubject = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      studyTime: {
-        ...prev.studyTime,
-        subjects: prev.studyTime.subjects.filter((_, i) => i !== index)
-      }
-    }));
-  };
-
-  const generateProfile = () => {
-    let profile = '◆生徒プロフィール\n';
-    
-    const gradeDisplay = formData.grade === 'その他' ? formData.gradeOther : 
-                        formData.grade === '学年を記載しない' ? '' : formData.grade;
-    if (gradeDisplay) {
-      profile += '学年: ' + gradeDisplay + '\n';
-    }
-    
-    if (formData.schoolType !== '学校を記載しない' && formData.school.trim()) {
-      profile += formData.schoolType + ': ' + formData.school + '\n';
-    }
-    
-    if (formData.subjects.trim()) {
-      profile += '受験科目（得意な順番で）: ' + formData.subjects + '\n';
-    }
-    
-    profile += '\n◆志望校\n';
-    if (formData.firstChoice.trim()) {
-      profile += '第一志望群: ' + formData.firstChoice + '\n';
-    }
-    if (formData.secondChoice.trim()) {
-      profile += '第二志望群: ' + formData.secondChoice + '\n';
-    }
-    if (formData.thirdChoice.trim()) {
-      profile += '第三志望群: ' + formData.thirdChoice + '\n';
-    }
-    
-    profile += '\n◆1ヶ月ごとの学習到達目標\n';
-    const monthlyGoals = Object.entries(formData.monthlyGoals)
-      .filter(([month, goal]) => goal.trim())
-      .map(([month, goal]) => {
-        const monthNames = {
-          march: '3月末',
-          april: '4月末',
-          may: '5月末',
-          june: '6月末',
-          july: '7月末',
-          august: '8月末',
-          september: '9月末',
-          october: '10月末',
-          november: '11月末',
-          december: '12月末',
-          january: '1月末',
-          february: '2月末'
-        };
-        return '(' + monthNames[month] + '): ' + goal;
-      });
-    
-    if (monthlyGoals.length > 0) {
-      profile += monthlyGoals.join('\n') + '\n';
-    }
-    
-    profile += '\n◆直近の模試の成績\n';
-    if (formData.examResults.date.trim() || formData.examResults.examName.trim()) {
-      profile += formData.examResults.date + ' ' + formData.examResults.examName + '\n';
-    }
-    
-    formData.examResults.subjects.forEach(subject => {
-      if (subject.score || subject.total || subject.deviation) {
-        profile += subject.name + '　' + subject.score + '/' + subject.total + '（' + subject.deviation + '）\n';
-      }
-    });
-    
-    if (formData.examResults.other.trim()) {
-      profile += formData.examResults.other + '\n';
-    }
-    
-    profile += '\n◆模擬試験/英検等の日程\n';
-    if (formData.examSchedule.trim()) {
-      profile += formData.examSchedule + '\n';
-    }
-    
-    profile += '\n◆1日のスケジューリング\n';
-    profile += '①各科目の目標勉強時間: ';
-    
-    const studyTimes = [];
-    formData.studyTime.subjects.forEach(subject => {
-      if (subject.hours) {
-        studyTimes.push(subject.name + subject.hours + '時間');
-      }
-    });
-    
-    if (studyTimes.length > 0) {
-      profile += studyTimes.join(' ');
-    }
-    profile += '\n\n';
-    
-    if (formData.wakeTime || formData.sleepTime) {
-      profile += '②起床時間 / 就寝時間 : ' + formData.wakeTime + ' / ' + formData.sleepTime + '\n\n';
-    }
-    
-    if (formData.schedule.trim()) {
-      profile += '②スケジュール:\n' + formData.schedule;
-    }
-
-    setGeneratedText(profile);
-  };
-
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(generatedText);
-  };
-
-  const saveAsJSON = () => {
-    try {
-      // 現在の日時を取得してフォーマット
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      const day = String(now.getDate()).padStart(2, '0');
-      const hours = String(now.getHours()).padStart(2, '0');
-      const minutes = String(now.getMinutes()).padStart(2, '0');
-      const seconds = String(now.getSeconds()).padStart(2, '0');
-      const timestamp = `${year}${month}${day}_${hours}${minutes}${seconds}`;
-
-      // ファイル名を生成（不正な文字を除去）
-      const sanitize = (str) => str.replace(/[<>:"/\\|?*]/g, '_').trim() || '未入力';
-      const studentName = sanitize(formData.studentName);
-      const trainingType = sanitize(formData.trainingType);
-      const instructor = sanitize(formData.instructor);
-      const filename = `${studentName}_${trainingType}_${instructor}_${timestamp}.json`;
-
-      // JSONデータを作成
-      const jsonData = {
-        ...formData,
-        createdAt: now.toISOString(),
-        version: '1.0'
-      };
-
-      // JSONファイルとしてダウンロード
-      const jsonString = JSON.stringify(jsonData, null, 2);
-      const blob = new Blob([jsonString], { 
-        type: 'application/json;charset=utf-8' 
-      });
-      
-      // URLを作成してダウンロード
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      link.style.display = 'none';
-      
-      // DOMに追加してクリック
-      document.body.appendChild(link);
-      link.click();
-      
-      // クリーンアップ
-      setTimeout(() => {
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-      }, 100);
-      
-      console.log('ファイルダウンロード開始:', filename);
-      
-    } catch (error) {
-      console.error('ダウンロードエラー:', error);
-      alert('ファイルのダウンロードに失敗しました。');
-    }
-  };
-
-  const loadFromJSON = (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const jsonData = JSON.parse(e.target.result);
-        
-        // バージョンチェック（将来の拡張性のため）
-        if (jsonData.version && jsonData.version !== '1.0') {
-          alert('このファイルのバージョンは対応していません。');
-          return;
-        }
-
-        // createdAt と version を除いてformDataに設定
-        const { createdAt, version, ...loadedData } = jsonData;
-        setFormData(loadedData);
-        
-        // 成功メッセージ
-        alert(`データを読み込みました。\n生徒名: ${loadedData.studentName || '未入力'}`);
-        
-      } catch (error) {
-        alert('ファイルの読み込みに失敗しました。正しいJSONファイルを選択してください。');
-        console.error('JSON読み込みエラー:', error);
-      }
-    };
-    
-    reader.readAsText(file);
-    // ファイル選択をリセット（同じファイルを再度選択できるように）
-    event.target.value = '';
-  };
-
-  const clearForm = () => {
-    setFormData({
-      studentName: '',
-      trainingType: '',
-      instructor: '',
-      grade: '',
-      gradeOther: '',
-      schoolType: '出身校',
-      school: '',
-      subjects: '',
-      firstChoice: '',
-      secondChoice: '',
-      thirdChoice: '',
-      monthlyGoals: {
-        march: '',
-        april: '',
-        may: '',
-        june: '',
-        july: '',
-        august: '',
-        september: '',
-        october: '',
-        november: '',
-        december: '',
-        january: '',
-        february: ''
-      },
-      examResults: {
-        date: '',
-        examName: '',
-        subjects: [
-          { name: '英語', score: '', total: '', deviation: '' }
-        ],
-        other: ''
-      },
-      examSchedule: '',
-      studyTime: {
-        subjects: [
-          { name: '英語', hours: '' }
-        ]
-      },
-      wakeTime: '',
-      sleepTime: '',
-      schedule: ''
-    });
-    setSelectedSubject('');
-    setSelectedStudySubject('');
-    setGeneratedText('');
-  };
-
-  return (
-    <div className="max-w-6xl mx-auto p-6 bg-white">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">生徒プロフィール作成ツール</h1>
-        <p className="text-gray-600 mb-4">入力された情報を整理して、指定のテンプレートに沿った文章を自動生成します</p>
-        
-        <div className="bg-gray-100 p-4 rounded-lg">
-          <div className="flex items-center gap-4">
-            <label className="flex items-center cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-              <Upload className="w-4 h-4 mr-2" />
-              JSONファイルを読み込み
-              <input
-                type="file"
-                accept=".json"
-                onChange={loadFromJSON}
-                className="hidden"
-              />
-            </label>
-            <span className="text-sm text-gray-600">
-              保存した生徒プロフィールのファイルを読み込んで編集ができます
-            </span>
-          </div>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生徒プロフィール作成ツール</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="max-w-6xl mx-auto p-6 bg-white">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">生徒プロフィール作成ツール</h1>
+            <p class="text-gray-600 mb-4">入力された情報を整理して、指定のテンプレートに沿った文章を自動生成します</p>
+            
+            <div class="bg-gray-100 p-4 rounded-lg">
+                <div class="flex items-center gap-4">
+                    <label class="flex items-center cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        📁 JSONファイルを読み込み
+                        <input type="file" accept=".json" id="jsonFileInput" class="hidden">
+                    </label>
+                    <span class="text-sm text-gray-600">
+                        保存した生徒プロフィールのファイルを読み込んで編集ができます
+                    </span>
+                </div>
+            </div>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="space-y-6">
-          {/* 1. 生徒名 */}
-          <div className="bg-orange-50 p-6 rounded-lg">
-            <h2 className="text-xl font-semibold mb-4 text-orange-800">生徒名</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">生徒氏名</label>
-                <input
-                  type="text"
-                  value={formData.studentName}
-                  onChange={(e) => handleInputChange('studentName', e.target.value)}
-                  placeholder="例: 高田史拓"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">特訓種別・科目</label>
-                <input
-                  type="text"
-                  value={formData.trainingType}
-                  onChange={(e) => handleInputChange('trainingType', e.target.value)}
-                  placeholder="個別S英語"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">担当</label>
-                <input
-                  type="text"
-                  value={formData.instructor}
-                  onChange={(e) => handleInputChange('instructor', e.target.value)}
-                  placeholder="担当名を入力"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* 2. 基本情報 */}
-          <div className="bg-blue-50 p-6 rounded-lg">
-            <h2 className="text-xl font-semibold mb-4 text-blue-800">基本情報</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">学年</label>
-                <select
-                  value={formData.grade}
-                  onChange={(e) => handleInputChange('grade', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">選択してください</option>
-                  {formData.schoolType === '在籍校' && formData.school === '男塾' ? (
-                    <React.Fragment>
-                      <option value="一号生">一号生</option>
-                      <option value="二号生">二号生</option>
-                      <option value="三号生">三号生</option>
-                    </React.Fragment>
-                  ) : (
-                    <React.Fragment>
-                      <option value="既卒">既卒</option>
-                      <option value="高校3年生">高校3年生</option>
-                      <option value="高校2年生">高校2年生</option>
-                      <option value="高校1年生">高校1年生</option>
-                      <option value="中学3年生">中学3年生</option>
-                      <option value="中学2年生">中学2年生</option>
-                      <option value="中学1年生">中学1年生</option>
-                      <option value="その他">その他</option>
-                      <option value="学年を記載しない">学年を記載しない</option>
-                    </React.Fragment>
-                  )}
-                </select>
-                {(formData.grade === 'その他' && !(formData.schoolType === '在籍校' && formData.school === '男塾')) && (
-                  <div className="mt-2">
-                    <input
-                      type="text"
-                      value={formData.gradeOther}
-                      onChange={(e) => handleInputChange('gradeOther', e.target.value)}
-                      placeholder="学年を入力してください"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">学校区分</label>
-                <div className="flex flex-wrap gap-4">
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      value="出身校"
-                      checked={formData.schoolType === '出身校'}
-                      onChange={(e) => handleInputChange('schoolType', e.target.value)}
-                      className="mr-2"
-                    />
-                    出身校
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      value="在籍校"
-                      checked={formData.schoolType === '在籍校'}
-                      onChange={(e) => handleInputChange('schoolType', e.target.value)}
-                      className="mr-2"
-                    />
-                    在籍校
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      value="学校を記載しない"
-                      checked={formData.schoolType === '学校を記載しない'}
-                      onChange={(e) => handleInputChange('schoolType', e.target.value)}
-                      className="mr-2"
-                    />
-                    学校を記載しない
-                  </label>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="space-y-6">
+                <!-- 1. 生徒名 -->
+                <div class="bg-orange-50 p-6 rounded-lg">
+                    <h2 class="text-xl font-semibold mb-4 text-orange-800">生徒名</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">生徒氏名</label>
+                            <input type="text" id="studentName" placeholder="例: 高田史拓" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">特訓種別・科目</label>
+                            <input type="text" id="trainingType" placeholder="個別S英語" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">担当</label>
+                            <input type="text" id="instructor" placeholder="担当名を入力" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        </div>
+                    </div>
                 </div>
-              </div>
-              {formData.schoolType !== '学校を記載しない' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{formData.schoolType}</label>
-                  <input
-                    type="text"
-                    value={formData.school}
-                    onChange={(e) => handleInputChange('school', e.target.value)}
-                    placeholder="例: 都立上野高校"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+
+                <!-- 2. 基本情報 -->
+                <div class="bg-blue-50 p-6 rounded-lg">
+                    <h2 class="text-xl font-semibold mb-4 text-blue-800">基本情報</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">学年</label>
+                            <select id="grade" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">選択してください</option>
+                                <option value="既卒">既卒</option>
+                                <option value="高校3年生">高校3年生</option>
+                                <option value="高校2年生">高校2年生</option>
+                                <option value="高校1年生">高校1年生</option>
+                                <option value="中学3年生">中学3年生</option>
+                                <option value="中学2年生">中学2年生</option>
+                                <option value="中学1年生">中学1年生</option>
+                                <option value="その他">その他</option>
+                                <option value="学年を記載しない">学年を記載しない</option>
+                            </select>
+                            <div id="gradeOtherContainer" class="mt-2 hidden">
+                                <input type="text" id="gradeOther" placeholder="学年を入力してください" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">学校区分</label>
+                            <div class="flex flex-wrap gap-4">
+                                <label class="flex items-center">
+                                    <input type="radio" name="schoolType" value="出身校" checked class="mr-2">
+                                    出身校
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="radio" name="schoolType" value="在籍校" class="mr-2">
+                                    在籍校
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="radio" name="schoolType" value="学校を記載しない" class="mr-2">
+                                    学校を記載しない
+                                </label>
+                            </div>
+                        </div>
+                        <div id="schoolContainer">
+                            <label class="block text-sm font-medium text-gray-700 mb-1" id="schoolLabel">出身校</label>
+                            <input type="text" id="school" placeholder="例: 都立上野高校" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">受験科目（得意な順番で）</label>
+                            <input type="text" id="subjects" placeholder="例: 英語>日本史>国語(現古漢)" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
                 </div>
-              )}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">受験科目（得意な順番で）</label>
-                <input
-                  type="text"
-                  value={formData.subjects}
-                  onChange={(e) => handleInputChange('subjects', e.target.value)}
-                  placeholder="例: 英語>日本史>国語(現古漢)"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-          </div>
 
-          {/* 3. 志望校 */}
-          <div className="bg-green-50 p-6 rounded-lg">
-            <h2 className="text-xl font-semibold mb-4 text-green-800">志望校</h2>
-            <p className="text-sm text-green-700 mb-4">可能な限り学部学科まで</p>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">第一志望群</label>
-                <input
-                  type="text"
-                  value={formData.firstChoice}
-                  onChange={(e) => handleInputChange('firstChoice', e.target.value)}
-                  placeholder="例: 早稲田大学教育学部"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">第二志望群</label>
-                <input
-                  type="text"
-                  value={formData.secondChoice}
-                  onChange={(e) => handleInputChange('secondChoice', e.target.value)}
-                  placeholder="例: 中央大学文学部"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">第三志望群</label>
-                <input
-                  type="text"
-                  value={formData.thirdChoice}
-                  onChange={(e) => handleInputChange('thirdChoice', e.target.value)}
-                  placeholder="例: 日本大学文理学部"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* 4. 月別学習到達目標 */}
-          <div className="bg-yellow-50 p-6 rounded-lg">
-            <h2 className="text-xl font-semibold mb-4 text-yellow-800">月別学習到達目標</h2>
-            <p className="text-sm text-yellow-700 mb-4">○月○週目のように細かく書きたい場合は一度プロフィール作成してから手打ちで修正してください</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {Object.entries(formData.monthlyGoals).map(([month, goal]) => {
-                const monthNames = {
-                  march: '3月末',
-                  april: '4月末',
-                  may: '5月末',
-                  june: '6月末',
-                  july: '7月末',
-                  august: '8月末',
-                  september: '9月末',
-                  october: '10月末',
-                  november: '11月末',
-                  december: '12月末',
-                  january: '1月末',
-                  february: '2月末'
-                };
-                return (
-                  <div key={month}>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">{monthNames[month]}</label>
-                    <input
-                      type="text"
-                      value={goal}
-                      onChange={(e) => handleInputChange('monthlyGoals.' + month, e.target.value)}
-                      placeholder="例: 日大レベル解釈まで完成"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* 5. 直近の模試の成績 */}
-          <div className="bg-purple-50 p-6 rounded-lg">
-            <h2 className="text-xl font-semibold mb-4 text-purple-800">直近の模試の成績</h2>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">実施日</label>
-                  <input
-                    type="text"
-                    value={formData.examResults.date}
-                    onChange={(e) => handleInputChange('examResults.date', e.target.value)}
-                    placeholder="例: 4/25"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
+                <!-- 3. 志望校 -->
+                <div class="bg-green-50 p-6 rounded-lg">
+                    <h2 class="text-xl font-semibold mb-4 text-green-800">志望校</h2>
+                    <p class="text-sm text-green-700 mb-4">可能な限り学部学科まで</p>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">第一志望群</label>
+                            <input type="text" id="firstChoice" placeholder="例: 早稲田大学教育学部" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">第二志望群</label>
+                            <input type="text" id="secondChoice" placeholder="例: 中央大学文学部" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">第三志望群</label>
+                            <input type="text" id="thirdChoice" placeholder="例: 日本大学文理学部" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                    </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">模試名</label>
-                  <input
-                    type="text"
-                    value={formData.examResults.examName}
-                    onChange={(e) => handleInputChange('examResults.examName', e.target.value)}
-                    placeholder="例: 第2回全統共通テスト模試"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
+
+                <!-- 4. 月別学習到達目標 -->
+                <div class="bg-yellow-50 p-6 rounded-lg">
+                    <h2 class="text-xl font-semibold mb-4 text-yellow-800">月別学習到達目標</h2>
+                    <p class="text-sm text-yellow-700 mb-4">○月○週目のように細かく書きたい場合は一度プロフィール作成してから手打ちで修正してください</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">3月末</label>
+                            <input type="text" id="march" placeholder="例: 日大レベル解釈まで完成" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">4月末</label>
+                            <input type="text" id="april" placeholder="例: 日大レベル解釈まで完成" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">5月末</label>
+                            <input type="text" id="may" placeholder="例: 日大レベル解釈まで完成" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">6月末</label>
+                            <input type="text" id="june" placeholder="例: 日大レベル解釈まで完成" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">7月末</label>
+                            <input type="text" id="july" placeholder="例: 日大レベル解釈まで完成" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">8月末</label>
+                            <input type="text" id="august" placeholder="例: 日大レベル解釈まで完成" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">9月末</label>
+                            <input type="text" id="september" placeholder="例: 日大レベル解釈まで完成" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">10月末</label>
+                            <input type="text" id="october" placeholder="例: 日大レベル解釈まで完成" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">11月末</label>
+                            <input type="text" id="november" placeholder="例: 日大レベル解釈まで完成" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">12月末</label>
+                            <input type="text" id="december" placeholder="例: 日大レベル解釈まで完成" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">1月末</label>
+                            <input type="text" id="january" placeholder="例: 日大レベル解釈まで完成" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">2月末</label>
+                            <input type="text" id="february" placeholder="例: 日大レベル解釈まで完成" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                        </div>
+                    </div>
                 </div>
-              </div>
-              
-              {formData.examResults.subjects.map((subject, index) => (
-                <div key={index}>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="block text-sm font-medium text-gray-700">{subject.name}</label>
-                    {formData.examResults.subjects.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeSubject(index)}
-                        className="text-red-600 hover:text-red-800 text-sm"
-                      >
-                        削除
-                      </button>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 mb-4">
-                    <input
-                      type="text"
-                      value={subject.score}
-                      onChange={(e) => handleSubjectChange(index, 'score', e.target.value)}
-                      placeholder="得点"
-                      className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    />
-                    <input
-                      type="text"
-                      value={subject.total}
-                      onChange={(e) => handleSubjectChange(index, 'total', e.target.value)}
-                      placeholder="満点"
-                      className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    />
-                    <input
-                      type="text"
-                      value={subject.deviation}
-                      onChange={(e) => handleSubjectChange(index, 'deviation', e.target.value)}
-                      placeholder="偏差値"
-                      className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    />
-                  </div>
+
+                <!-- 5. 直近の模試の成績 -->
+                <div class="bg-purple-50 p-6 rounded-lg">
+                    <h2 class="text-xl font-semibold mb-4 text-purple-800">直近の模試の成績</h2>
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">実施日</label>
+                                <input type="text" id="examDate" placeholder="例: 4/25" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">模試名</label>
+                                <input type="text" id="examName" placeholder="例: 第2回全統共通テスト模試" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            </div>
+                        </div>
+                        
+                        <div id="examSubjects">
+                            <div class="exam-subject-item" data-index="0">
+                                <div class="flex items-center justify-between mb-2">
+                                    <label class="block text-sm font-medium text-gray-700">英語</label>
+                                </div>
+                                <div class="grid grid-cols-3 gap-2 mb-4">
+                                    <input type="text" placeholder="得点" class="score-input px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                    <input type="text" placeholder="満点" class="total-input px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                    <input type="text" placeholder="偏差値" class="deviation-input px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-2 mb-4">
+                            <input type="text" id="newSubject" placeholder="科目名を入力" class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            <button type="button" id="addSubjectBtn" class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors">
+                                追加
+                            </button>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">その他科目</label>
+                            <textarea id="examOther" placeholder="その他の科目がある場合は記入" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" rows="2"></textarea>
+                        </div>
+                    </div>
                 </div>
-              ))}
 
-              <div className="flex gap-2 mb-4">
-                <input
-                  type="text"
-                  value={selectedSubject}
-                  onChange={(e) => setSelectedSubject(e.target.value)}
-                  placeholder="科目名を入力"
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
-                <button
-                  type="button"
-                  onClick={addSubject}
-                  disabled={!selectedSubject}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-                >
-                  追加
-                </button>
-              </div>
+                <!-- 6. 試験日程 -->
+                <div class="bg-red-50 p-6 rounded-lg">
+                    <h2 class="text-xl font-semibold mb-4 text-red-800">試験日程</h2>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">模擬試験/英検等の日程</label>
+                        <textarea id="examSchedule" placeholder="例:&#10;6/28 駿台ベネッセ模試&#10;8/24 河合塾全統マーク模試&#10;8/31 河合塾全統記述模試" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500" rows="4"></textarea>
+                    </div>
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">その他科目</label>
-                <textarea
-                  value={formData.examResults.other}
-                  onChange={(e) => handleInputChange('examResults.other', e.target.value)}
-                  placeholder="その他の科目がある場合は記入"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  rows="2"
-                />
-              </div>
+                <!-- 7. 1日のスケジューリング -->
+                <div class="bg-indigo-50 p-6 rounded-lg">
+                    <h2 class="text-xl font-semibold mb-4 text-indigo-800">1日のスケジューリング</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">各科目の目標勉強時間</label>
+                            
+                            <div id="studySubjects">
+                                <div class="study-subject-item" data-index="0">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <label class="block text-sm font-medium text-gray-700">英語</label>
+                                    </div>
+                                    <div class="flex items-center gap-2 mb-4">
+                                        <input type="text" placeholder="4" class="hours-input w-20 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                        <span class="text-gray-600">時間</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex gap-2 mb-4">
+                                <input type="text" id="newStudySubject" placeholder="科目名を入力" class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <button type="button" id="addStudySubjectBtn" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors">
+                                    追加
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">起床時間</label>
+                                <input type="text" id="wakeTime" placeholder="7:30" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">就寝時間</label>
+                                <input type="text" id="sleepTime" placeholder="23:30" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">スケジュールを記入</label>
+                            <textarea id="schedule" placeholder="例:&#10;6:30 起床&#10;7:00-8:00 朝食・準備&#10;8:00-12:00 午前学習&#10;12:00-13:00 昼食・休憩" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-y" rows="4"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex space-x-4">
+                    <button id="generateBtn" class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold">
+                        プロフィール作成
+                    </button>
+                    <button id="downloadBtn" class="flex items-center justify-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                        💾 ダウンロード
+                    </button>
+                    <button id="clearBtn" class="flex items-center justify-center px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                        🔄 クリア
+                    </button>
+                </div>
             </div>
-          </div>
 
-          {/* 6. 試験日程 */}
-          <div className="bg-red-50 p-6 rounded-lg">
-            <h2 className="text-xl font-semibold mb-4 text-red-800">試験日程</h2>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">模擬試験/英検等の日程</label>
-              <textarea
-                value={formData.examSchedule}
-                onChange={(e) => handleInputChange('examSchedule', e.target.value)}
-                placeholder="例:&#10;6/28 駿台ベネッセ模試&#10;8/24 河合塾全統マーク模試&#10;8/31 河合塾全統記述模試"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                rows="4"
-              />
-            </div>
-          </div>
-
-          {/* 7. 1日のスケジューリング */}
-          <div className="bg-indigo-50 p-6 rounded-lg">
-            <h2 className="text-xl font-semibold mb-4 text-indigo-800">1日のスケジューリング</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">各科目の目標勉強時間</label>
-                
-                {formData.studyTime.subjects.map((subject, index) => (
-                  <div key={index} className="mb-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <label className="block text-sm font-medium text-gray-700">{subject.name}</label>
-                      {formData.studyTime.subjects.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeStudySubject(index)}
-                          className="text-red-600 hover:text-red-800 text-sm"
-                        >
-                          削除
+            <div class="space-y-6">
+                <div class="bg-gray-50 p-6 rounded-lg">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-semibold text-gray-800">作成されたプロフィール</h2>
+                        <button id="copyBtn" class="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors hidden">
+                            📋 コピー
                         </button>
-                      )}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={subject.hours}
-                        onChange={(e) => handleStudyTimeChange(index, 'hours', e.target.value)}
-                        placeholder="4"
-                        className="w-20 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      />
-                      <span className="text-gray-600">時間</span>
+                    <div id="helpText" class="bg-blue-50 p-3 rounded-lg mb-4 hidden">
+                        <ul class="text-sm text-blue-700 space-y-1">
+                            <li>• 作成されたテキストは直接編集可能です</li>
+                            <li>• 「コピー」ボタンでクリップボードにコピーできます</li>
+                            <li>• 必要に応じて手動で調整・追記してください</li>
+                            <li>• 模試結果や学習進捗に応じて定期的に更新してください</li>
+                        </ul>
                     </div>
-                  </div>
-                ))}
-
-                <div className="flex gap-2 mb-4">
-                  <input
-                    type="text"
-                    value={selectedStudySubject}
-                    onChange={(e) => setSelectedStudySubject(e.target.value)}
-                    placeholder="科目名を入力"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                  <button
-                    type="button"
-                    onClick={addStudySubject}
-                    disabled={!selectedStudySubject}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-                  >
-                    追加
-                  </button>
+                    <div class="bg-white p-4 rounded-lg border min-h-96">
+                        <textarea id="generatedText" class="w-full h-96 p-3 text-sm text-gray-800 font-mono leading-relaxed border-none resize-none focus:outline-none hidden" placeholder="作成されたプロフィールがここに表示されます"></textarea>
+                        <p id="placeholderText" class="text-gray-500 text-center py-8">
+                            左側のフォームに入力して「プロフィール作成」ボタンを押してください
+                        </p>
+                    </div>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">起床時間</label>
-                  <input
-                    type="text"
-                    value={formData.wakeTime}
-                    onChange={(e) => handleInputChange('wakeTime', e.target.value)}
-                    placeholder="7:30"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">就寝時間</label>
-                  <input
-                    type="text"
-                    value={formData.sleepTime}
-                    onChange={(e) => handleInputChange('sleepTime', e.target.value)}
-                    placeholder="23:30"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">スケジュールを記入</label>
-                <textarea
-                  value={formData.schedule}
-                  onChange={(e) => handleInputChange('schedule', e.target.value)}
-                  placeholder="例:&#10;6:30 起床&#10;7:00-8:00 朝食・準備&#10;8:00-12:00 午前学習&#10;12:00-13:00 昼食・休憩"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-y"
-                  rows="4"
-                />
-              </div>
             </div>
-          </div>
-
-          <div className="flex space-x-4">
-            <button
-              onClick={generateProfile}
-              className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold"
-            >
-              プロフィール作成
-            </button>
-            <button
-              onClick={saveAsJSON}
-              className="flex items-center justify-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              ダウンロード
-            </button>
-            <button
-              onClick={clearForm}
-              className="flex items-center justify-center px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              <RefreshCw className="w-4 h-4 mr-2" />
-              クリア
-            </button>
-          </div>
         </div>
-
-        <div className="space-y-6">
-          <div className="bg-gray-50 p-6 rounded-lg">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-gray-800">作成されたプロフィール</h2>
-              {generatedText && (
-                <button
-                  onClick={copyToClipboard}
-                  className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  <Copy className="w-4 h-4 mr-2" />
-                  コピー
-                </button>
-              )}
-            </div>
-            {generatedText && (
-              <div className="bg-blue-50 p-3 rounded-lg mb-4">
-                <ul className="text-sm text-blue-700 space-y-1">
-                  <li>• 作成されたテキストは直接編集可能です</li>
-                  <li>• 「コピー」ボタンでクリップボードにコピーできます</li>
-                  <li>• 必要に応じて手動で調整・追記してください</li>
-                  <li>• 模試結果や学習進捗に応じて定期的に更新してください</li>
-                </ul>
-              </div>
-            )}
-            <div className="bg-white p-4 rounded-lg border min-h-96">
-              {generatedText ? (
-                <textarea
-                  value={generatedText}
-                  onChange={(e) => setGeneratedText(e.target.value)}
-                  className="w-full h-96 p-3 text-sm text-gray-800 font-mono leading-relaxed border-none resize-none focus:outline-none"
-                  placeholder="作成されたプロフィールがここに表示されます"
-                />
-              ) : (
-                <p className="text-gray-500 text-center py-8">
-                  左側のフォームに入力して「プロフィール作成」ボタンを押してください
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
-  );
-};
 
-export default StudentProfileFormatter;
+    <script>
+        // Initialize Lucide icons (removed as we're using emoji instead)
+        // lucide.createIcons();
+
+        // State management
+        let examSubjectsCount = 1;
+        let studySubjectsCount = 1;
+
+        // DOM elements
+        const elements = {
+            grade: document.getElementById('grade'),
+            gradeOtherContainer: document.getElementById('gradeOtherContainer'),
+            gradeOther: document.getElementById('gradeOther'),
+            schoolType: document.querySelectorAll('input[name="schoolType"]'),
+            schoolContainer: document.getElementById('schoolContainer'),
+            schoolLabel: document.getElementById('schoolLabel'),
+            school: document.getElementById('school'),
+            examSubjects: document.getElementById('examSubjects'),
+            newSubject: document.getElementById('newSubject'),
+            addSubjectBtn: document.getElementById('addSubjectBtn'),
+            studySubjects: document.getElementById('studySubjects'),
+            newStudySubject: document.getElementById('newStudySubject'),
+            addStudySubjectBtn: document.getElementById('addStudySubjectBtn'),
+            generateBtn: document.getElementById('generateBtn'),
+            downloadBtn: document.getElementById('downloadBtn'),
+            clearBtn: document.getElementById('clearBtn'),
+            copyBtn: document.getElementById('copyBtn'),
+            generatedText: document.getElementById('generatedText'),
+            placeholderText: document.getElementById('placeholderText'),
+            helpText: document.getElementById('helpText'),
+            jsonFileInput: document.getElementById('jsonFileInput')
+        };
+
+        // Event listeners
+        elements.grade.addEventListener('change', handleGradeChange);
+        elements.schoolType.forEach(radio => {
+            radio.addEventListener('change', handleSchoolTypeChange);
+        });
+        elements.addSubjectBtn.addEventListener('click', addExamSubject);
+        elements.addStudySubjectBtn.addEventListener('click', addStudySubject);
+        elements.generateBtn.addEventListener('click', generateProfile);
+        elements.downloadBtn.addEventListener('click', downloadJSON);
+        elements.clearBtn.addEventListener('click', clearForm);
+        elements.copyBtn.addEventListener('click', copyToClipboard);
+        elements.jsonFileInput.addEventListener('change', loadFromJSON);
+
+        function handleGradeChange() {
+            const shouldShow = elements.grade.value === 'その他';
+            elements.gradeOtherContainer.classList.toggle('hidden', !shouldShow);
+        }
+
+        function handleSchoolTypeChange() {
+            const selectedValue = document.querySelector('input[name="schoolType"]:checked').value;
+            const shouldHide = selectedValue === '学校を記載しない';
+            elements.schoolContainer.classList.toggle('hidden', shouldHide);
+            elements.schoolLabel.textContent = selectedValue;
+        }
+
+        function addExamSubject() {
+            const subjectName = elements.newSubject.value.trim();
+            if (!subjectName) return;
+
+            // Check if subject already exists
+            const existingSubjects = Array.from(elements.examSubjects.querySelectorAll('.exam-subject-item'))
+                .map(item => item.querySelector('label').textContent);
+            if (existingSubjects.includes(subjectName)) return;
+
+            const subjectDiv = document.createElement('div');
+            subjectDiv.className = 'exam-subject-item';
+            subjectDiv.setAttribute('data-index', examSubjectsCount);
+            subjectDiv.innerHTML = `
+                <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-medium text-gray-700">${subjectName}</label>
+                    <button type="button" onclick="removeExamSubject(${examSubjectsCount})" class="text-red-600 hover:text-red-800 text-sm">削除</button>
+                </div>
+                <div class="grid grid-cols-3 gap-2 mb-4">
+                    <input type="text" placeholder="得点" class="score-input px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <input type="text" placeholder="満点" class="total-input px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <input type="text" placeholder="偏差値" class="deviation-input px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+            `;
+
+            elements.examSubjects.appendChild(subjectDiv);
+            elements.newSubject.value = '';
+            examSubjectsCount++;
+        }
+
+        function removeExamSubject(index) {
+            const subjectItem = document.querySelector(`.exam-subject-item[data-index="${index}"]`);
+            if (subjectItem && elements.examSubjects.children.length > 1) {
+                subjectItem.remove();
+            }
+        }
+
+        function addStudySubject() {
+            const subjectName = elements.newStudySubject.value.trim();
+            if (!subjectName) return;
+
+            // Check if subject already exists
+            const existingSubjects = Array.from(elements.studySubjects.querySelectorAll('.study-subject-item'))
+                .map(item => item.querySelector('label').textContent);
+            if (existingSubjects.includes(subjectName)) return;
+
+            const subjectDiv = document.createElement('div');
+            subjectDiv.className = 'study-subject-item';
+            subjectDiv.setAttribute('data-index', studySubjectsCount);
+            subjectDiv.innerHTML = `
+                <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-medium text-gray-700">${subjectName}</label>
+                    <button type="button" onclick="removeStudySubject(${studySubjectsCount})" class="text-red-600 hover:text-red-800 text-sm">削除</button>
+                </div>
+                <div class="flex items-center gap-2 mb-4">
+                    <input type="text" placeholder="4" class="hours-input w-20 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <span class="text-gray-600">時間</span>
+                </div>
+            `;
+
+            elements.studySubjects.appendChild(subjectDiv);
+            elements.newStudySubject.value = '';
+            studySubjectsCount++;
+        }
+
+        function removeStudySubject(index) {
+            const subjectItem = document.querySelector(`.study-subject-item[data-index="${index}"]`);
+            if (subjectItem && elements.studySubjects.children.length > 1) {
+                subjectItem.remove();
+            }
+        }
+
+        function generateProfile() {
+            let profile = '◆生徒プロフィール\n';
+            
+            // Student basic info
+            const grade = elements.grade.value;
+            const gradeOther = elements.gradeOther.value;
+            const gradeDisplay = grade === 'その他' ? gradeOther : 
+                                grade === '学年を記載しない' ? '' : grade;
+            if (gradeDisplay) {
+                profile += '学年: ' + gradeDisplay + '\n';
+            }
+            
+            const schoolType = document.querySelector('input[name="schoolType"]:checked').value;
+            const school = elements.school.value.trim();
+            if (schoolType !== '学校を記載しない' && school) {
+                profile += schoolType + ': ' + school + '\n';
+            }
+            
+            const subjects = document.getElementById('subjects').value.trim();
+            if (subjects) {
+                profile += '受験科目（得意な順番で）: ' + subjects + '\n';
+            }
+            
+            // Academic goals
+            profile += '\n◆志望校\n';
+            const firstChoice = document.getElementById('firstChoice').value.trim();
+            const secondChoice = document.getElementById('secondChoice').value.trim();
+            const thirdChoice = document.getElementById('thirdChoice').value.trim();
+            
+            if (firstChoice) profile += '第一志望群: ' + firstChoice + '\n';
+            if (secondChoice) profile += '第二志望群: ' + secondChoice + '\n';
+            if (thirdChoice) profile += '第三志望群: ' + thirdChoice + '\n';
+            
+            // Monthly goals
+            profile += '\n◆1ヶ月ごとの学習到達目標\n';
+            const monthIds = ['march', 'april', 'may', 'june', 'july', 'august', 
+                             'september', 'october', 'november', 'december', 'january', 'february'];
+            const monthNames = ['3月末', '4月末', '5月末', '6月末', '7月末', '8月末',
+                               '9月末', '10月末', '11月末', '12月末', '1月末', '2月末'];
+            
+            const monthlyGoals = [];
+            monthIds.forEach((monthId, index) => {
+                const goal = document.getElementById(monthId).value.trim();
+                if (goal) {
+                    monthlyGoals.push('(' + monthNames[index] + '): ' + goal);
+                }
+            });
+            
+            if (monthlyGoals.length > 0) {
+                profile += monthlyGoals.join('\n') + '\n';
+            }
+            
+            // Exam results
+            profile += '\n◆直近の模試の成績\n';
+            const examDate = document.getElementById('examDate').value.trim();
+            const examName = document.getElementById('examName').value.trim();
+            if (examDate || examName) {
+                profile += examDate + ' ' + examName + '\n';
+            }
+            
+            // Exam subjects
+            const examSubjectItems = elements.examSubjects.querySelectorAll('.exam-subject-item');
+            examSubjectItems.forEach(item => {
+                const subjectName = item.querySelector('label').textContent;
+                const score = item.querySelector('.score-input').value;
+                const total = item.querySelector('.total-input').value;
+                const deviation = item.querySelector('.deviation-input').value;
+                
+                if (score || total || deviation) {
+                    profile += subjectName + '　' + score + '/' + total + '（' + deviation + '）\n';
+                }
+            });
+            
+            const examOther = document.getElementById('examOther').value.trim();
+            if (examOther) {
+                profile += examOther + '\n';
+            }
+            
+            // Exam schedule
+            profile += '\n◆模擬試験/英検等の日程\n';
+            const examSchedule = document.getElementById('examSchedule').value.trim();
+            if (examSchedule) {
+                profile += examSchedule + '\n';
+            }
+            
+            // Daily schedule
+            profile += '\n◆1日のスケジューリング\n';
+            profile += '①各科目の目標勉強時間: ';
+            
+            const studyTimes = [];
+            const studySubjectItems = elements.studySubjects.querySelectorAll('.study-subject-item');
+            studySubjectItems.forEach(item => {
+                const subjectName = item.querySelector('label').textContent;
+                const hours = item.querySelector('.hours-input').value;
+                
+                if (hours) {
+                    studyTimes.push(subjectName + hours + '時間');
+                }
+            });
+            
+            if (studyTimes.length > 0) {
+                profile += studyTimes.join(' ');
+            }
+            profile += '\n\n';
+            
+            const wakeTime = document.getElementById('wakeTime').value;
+            const sleepTime = document.getElementById('sleepTime').value;
+            if (wakeTime || sleepTime) {
+                profile += '②起床時間 / 就寝時間 : ' + wakeTime + ' / ' + sleepTime + '\n\n';
+            }
+            
+            const schedule = document.getElementById('schedule').value.trim();
+            if (schedule) {
+                profile += '②スケジュール:\n' + schedule;
+            }
+
+            // Update UI
+            elements.generatedText.value = profile;
+            elements.generatedText.classList.remove('hidden');
+            elements.placeholderText.classList.add('hidden');
+            elements.copyBtn.classList.remove('hidden');
+            elements.helpText.classList.remove('hidden');
+        }
+
+        function copyToClipboard() {
+            elements.generatedText.select();
+            elements.generatedText.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(elements.generatedText.value);
+        }
+
+        function downloadJSON() {
+            try {
+                // Get current date and time
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const seconds = String(now.getSeconds()).padStart(2, '0');
+                const timestamp = `${year}${month}${day}_${hours}${minutes}${seconds}`;
+
+                // Sanitize filename
+                const sanitize = (str) => str.replace(/[<>:"/\\|?*]/g, '_').trim() || '未入力';
+                const studentName = sanitize(document.getElementById('studentName').value);
+                const trainingType = sanitize(document.getElementById('trainingType').value);
+                const instructor = sanitize(document.getElementById('instructor').value);
+                const filename = `${studentName}_${trainingType}_${instructor}_${timestamp}.json`;
+
+                // Collect form data
+                const formData = collectFormData();
+                formData.createdAt = now.toISOString();
+                formData.version = '1.0';
+
+                // Create and download JSON file
+                const jsonString = JSON.stringify(formData, null, 2);
+                const blob = new Blob([jsonString], { 
+                    type: 'application/json;charset=utf-8' 
+                });
+                
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename;
+                link.style.display = 'none';
+                
+                document.body.appendChild(link);
+                link.click();
+                
+                setTimeout(() => {
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                }, 100);
+                
+                console.log('ファイルダウンロード開始:', filename);
+                
+            } catch (error) {
+                console.error('ダウンロードエラー:', error);
+                alert('ファイルのダウンロードに失敗しました。');
+            }
+        }
+
+        function collectFormData() {
+            // Basic info
+            const grade = elements.grade.value;
+            const formData = {
+                studentName: document.getElementById('studentName').value,
+                trainingType: document.getElementById('trainingType').value,
+                instructor: document.getElementById('instructor').value,
+                grade: grade,
+                gradeOther: elements.gradeOther.value,
+                schoolType: document.querySelector('input[name="schoolType"]:checked').value,
+                school: elements.school.value,
+                subjects: document.getElementById('subjects').value,
+                firstChoice: document.getElementById('firstChoice').value,
+                secondChoice: document.getElementById('secondChoice').value,
+                thirdChoice: document.getElementById('thirdChoice').value,
+                monthlyGoals: {
+                    march: document.getElementById('march').value,
+                    april: document.getElementById('april').value,
+                    may: document.getElementById('may').value,
+                    june: document.getElementById('june').value,
+                    july: document.getElementById('july').value,
+                    august: document.getElementById('august').value,
+                    september: document.getElementById('september').value,
+                    october: document.getElementById('october').value,
+                    november: document.getElementById('november').value,
+                    december: document.getElementById('december').value,
+                    january: document.getElementById('january').value,
+                    february: document.getElementById('february').value
+                },
+                examResults: {
+                    date: document.getElementById('examDate').value,
+                    examName: document.getElementById('examName').value,
+                    subjects: [],
+                    other: document.getElementById('examOther').value
+                },
+                examSchedule: document.getElementById('examSchedule').value,
+                studyTime: {
+                    subjects: []
+                },
+                wakeTime: document.getElementById('wakeTime').value,
+                sleepTime: document.getElementById('sleepTime').value,
+                schedule: document.getElementById('schedule').value
+            };
+
+            // Collect exam subjects
+            const examSubjectItems = elements.examSubjects.querySelectorAll('.exam-subject-item');
+            examSubjectItems.forEach(item => {
+                const name = item.querySelector('label').textContent;
+                const score = item.querySelector('.score-input').value;
+                const total = item.querySelector('.total-input').value;
+                const deviation = item.querySelector('.deviation-input').value;
+                formData.examResults.subjects.push({ name, score, total, deviation });
+            });
+
+            // Collect study subjects
+            const studySubjectItems = elements.studySubjects.querySelectorAll('.study-subject-item');
+            studySubjectItems.forEach(item => {
+                const name = item.querySelector('label').textContent;
+                const hours = item.querySelector('.hours-input').value;
+                formData.studyTime.subjects.push({ name, hours });
+            });
+
+            return formData;
+        }
+
+        function loadFromJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const jsonData = JSON.parse(e.target.result);
+                    
+                    if (jsonData.version && jsonData.version !== '1.0') {
+                        alert('このファイルのバージョンは対応していません。');
+                        return;
+                    }
+
+                    populateForm(jsonData);
+                    alert(`データを読み込みました。\n生徒名: ${jsonData.studentName || '未入力'}`);
+                    
+                } catch (error) {
+                    alert('ファイルの読み込みに失敗しました。正しいJSONファイルを選択してください。');
+                    console.error('JSON読み込みエラー:', error);
+                }
+            };
+            
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        function populateForm(data) {
+            // Basic info
+            document.getElementById('studentName').value = data.studentName || '';
+            document.getElementById('trainingType').value = data.trainingType || '';
+            document.getElementById('instructor').value = data.instructor || '';
+            elements.grade.value = data.grade || '';
+            elements.gradeOther.value = data.gradeOther || '';
+            
+            // School type
+            if (data.schoolType) {
+                const schoolTypeRadio = document.querySelector(`input[name="schoolType"][value="${data.schoolType}"]`);
+                if (schoolTypeRadio) schoolTypeRadio.checked = true;
+            }
+            elements.school.value = data.school || '';
+            
+            document.getElementById('subjects').value = data.subjects || '';
+            document.getElementById('firstChoice').value = data.firstChoice || '';
+            document.getElementById('secondChoice').value = data.secondChoice || '';
+            document.getElementById('thirdChoice').value = data.thirdChoice || '';
+
+            // Monthly goals
+            if (data.monthlyGoals) {
+                Object.keys(data.monthlyGoals).forEach(month => {
+                    const element = document.getElementById(month);
+                    if (element) element.value = data.monthlyGoals[month] || '';
+                });
+            }
+
+            // Exam results
+            if (data.examResults) {
+                document.getElementById('examDate').value = data.examResults.date || '';
+                document.getElementById('examName').value = data.examResults.examName || '';
+                document.getElementById('examOther').value = data.examResults.other || '';
+                
+                // Clear existing exam subjects and add from data
+                elements.examSubjects.innerHTML = '';
+                examSubjectsCount = 0;
+                
+                if (data.examResults.subjects && data.examResults.subjects.length > 0) {
+                    data.examResults.subjects.forEach(subject => {
+                        addExamSubjectFromData(subject);
+                    });
+                } else {
+                    // Add default English subject
+                    addExamSubjectFromData({ name: '英語', score: '', total: '', deviation: '' });
+                }
+            }
+
+            document.getElementById('examSchedule').value = data.examSchedule || '';
+
+            // Study time
+            if (data.studyTime && data.studyTime.subjects) {
+                elements.studySubjects.innerHTML = '';
+                studySubjectsCount = 0;
+                
+                if (data.studyTime.subjects.length > 0) {
+                    data.studyTime.subjects.forEach(subject => {
+                        addStudySubjectFromData(subject);
+                    });
+                } else {
+                    // Add default English subject
+                    addStudySubjectFromData({ name: '英語', hours: '' });
+                }
+            }
+
+            document.getElementById('wakeTime').value = data.wakeTime || '';
+            document.getElementById('sleepTime').value = data.sleepTime || '';
+            document.getElementById('schedule').value = data.schedule || '';
+
+            // Update UI state
+            handleGradeChange();
+            handleSchoolTypeChange();
+        }
+
+        function addExamSubjectFromData(subject) {
+            const subjectDiv = document.createElement('div');
+            subjectDiv.className = 'exam-subject-item';
+            subjectDiv.setAttribute('data-index', examSubjectsCount);
+            
+            const deleteButton = examSubjectsCount === 0 ? '' : 
+                `<button type="button" onclick="removeExamSubject(${examSubjectsCount})" class="text-red-600 hover:text-red-800 text-sm">削除</button>`;
+            
+            subjectDiv.innerHTML = `
+                <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-medium text-gray-700">${subject.name}</label>
+                    ${deleteButton}
+                </div>
+                <div class="grid grid-cols-3 gap-2 mb-4">
+                    <input type="text" value="${subject.score || ''}" placeholder="得点" class="score-input px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <input type="text" value="${subject.total || ''}" placeholder="満点" class="total-input px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <input type="text" value="${subject.deviation || ''}" placeholder="偏差値" class="deviation-input px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+            `;
+
+            elements.examSubjects.appendChild(subjectDiv);
+            examSubjectsCount++;
+        }
+
+        function addStudySubjectFromData(subject) {
+            const subjectDiv = document.createElement('div');
+            subjectDiv.className = 'study-subject-item';
+            subjectDiv.setAttribute('data-index', studySubjectsCount);
+            
+            const deleteButton = studySubjectsCount === 0 ? '' : 
+                `<button type="button" onclick="removeStudySubject(${studySubjectsCount})" class="text-red-600 hover:text-red-800 text-sm">削除</button>`;
+            
+            subjectDiv.innerHTML = `
+                <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-medium text-gray-700">${subject.name}</label>
+                    ${deleteButton}
+                </div>
+                <div class="flex items-center gap-2 mb-4">
+                    <input type="text" value="${subject.hours || ''}" placeholder="4" class="hours-input w-20 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <span class="text-gray-600">時間</span>
+                </div>
+            `;
+
+            elements.studySubjects.appendChild(subjectDiv);
+            studySubjectsCount++;
+        }
+
+        function clearForm() {
+            // Clear all input fields
+            document.querySelectorAll('input[type="text"], textarea').forEach(input => {
+                input.value = '';
+            });
+            
+            // Reset selects and radios
+            elements.grade.value = '';
+            document.querySelector('input[name="schoolType"][value="出身校"]').checked = true;
+            
+            // Reset dynamic sections
+            elements.examSubjects.innerHTML = `
+                <div class="exam-subject-item" data-index="0">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-sm font-medium text-gray-700">英語</label>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 mb-4">
+                        <input type="text" placeholder="得点" class="score-input px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <input type="text" placeholder="満点" class="total-input px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <input type="text" placeholder="偏差値" class="deviation-input px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                </div>
+            `;
+            
+            elements.studySubjects.innerHTML = `
+                <div class="study-subject-item" data-index="0">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-sm font-medium text-gray-700">英語</label>
+                    </div>
+                    <div class="flex items-center gap-2 mb-4">
+                        <input type="text" placeholder="4" class="hours-input w-20 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <span class="text-gray-600">時間</span>
+                    </div>
+                </div>
+            `;
+            
+            examSubjectsCount = 1;
+            studySubjectsCount = 1;
+            
+            // Reset output area
+            elements.generatedText.value = '';
+            elements.generatedText.classList.add('hidden');
+            elements.placeholderText.classList.remove('hidden');
+            elements.copyBtn.classList.add('hidden');
+            elements.helpText.classList.add('hidden');
+            
+            // Update UI state
+            handleGradeChange();
+            handleSchoolTypeChange();
+        }
+
+        // Initialize the form
+        handleSchoolTypeChange();
+    </script>
+</body>
+</html>
