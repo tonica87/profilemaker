@@ -207,11 +207,6 @@
                                 追加
                             </button>
                         </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">その他科目</label>
-                            <textarea id="examOther" placeholder="その他の科目がある場合は記入" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" rows="2"></textarea>
-                        </div>
                     </div>
                 </div>
 
@@ -511,11 +506,6 @@
                 }
             });
             
-            const examOther = document.getElementById('examOther').value.trim();
-            if (examOther) {
-                profile += examOther + '\n';
-            }
-            
             // Exam schedule
             profile += '\n◆模擬試験/英検等の日程\n';
             const examSchedule = document.getElementById('examSchedule').value.trim();
@@ -560,12 +550,93 @@
             elements.placeholderText.classList.add('hidden');
             elements.copyBtn.classList.remove('hidden');
             elements.helpText.classList.remove('hidden');
+            
+            // テキストエリアの高さを自動調整
+            autoResizeTextarea();
+        }
+
+        function autoResizeTextarea() {
+            const textarea = elements.generatedText;
+            
+            // 一時的に高さをリセット
+            textarea.style.height = 'auto';
+            
+            // スクロール高さを取得
+            const scrollHeight = textarea.scrollHeight;
+            const maxHeight = window.innerHeight * 0.8; // 画面の80%を最大高さに設定
+            
+            if (scrollHeight <= maxHeight) {
+                // コンテンツが最大高さ以下の場合、自動リサイズを適用
+                textarea.style.height = scrollHeight + 'px';
+                textarea.classList.add('auto-resize');
+                textarea.classList.remove('scrollable');
+            } else {
+                // コンテンツが最大高さを超える場合、スクロール可能にする
+                textarea.style.height = maxHeight + 'px';
+                textarea.classList.remove('auto-resize');
+                textarea.classList.add('scrollable');
+            }
         }
 
         function copyToClipboard() {
             elements.generatedText.select();
             elements.generatedText.setSelectionRange(0, 99999);
-            navigator.clipboard.writeText(elements.generatedText.value);
+            
+            navigator.clipboard.writeText(elements.generatedText.value).then(() => {
+                // コピー成功時の視覚的フィードバック
+                const originalText = elements.copyBtn.innerHTML;
+                const originalClass = elements.copyBtn.className;
+                
+                // ボタンの見た目を変更
+                elements.copyBtn.innerHTML = '✅ コピー完了!';
+                elements.copyBtn.className = originalClass.replace('bg-green-600', 'bg-blue-600').replace('hover:bg-green-700', 'hover:bg-blue-700');
+                elements.copyBtn.style.transform = 'scale(1.05)';
+                elements.copyBtn.style.transition = 'all 0.2s ease';
+                
+                // 2秒後に元に戻す
+                setTimeout(() => {
+                    elements.copyBtn.innerHTML = originalText;
+                    elements.copyBtn.className = originalClass;
+                    elements.copyBtn.style.transform = 'scale(1)';
+                }, 2000);
+                
+            }).catch(() => {
+                // フォールバック: 旧式のコピー方法
+                try {
+                    document.execCommand('copy');
+                    
+                    // 成功時の視覚的フィードバック
+                    const originalText = elements.copyBtn.innerHTML;
+                    const originalClass = elements.copyBtn.className;
+                    
+                    elements.copyBtn.innerHTML = '✅ コピー完了!';
+                    elements.copyBtn.className = originalClass.replace('bg-green-600', 'bg-blue-600').replace('hover:bg-green-700', 'hover:bg-blue-700');
+                    elements.copyBtn.style.transform = 'scale(1.05)';
+                    elements.copyBtn.style.transition = 'all 0.2s ease';
+                    
+                    setTimeout(() => {
+                        elements.copyBtn.innerHTML = originalText;
+                        elements.copyBtn.className = originalClass;
+                        elements.copyBtn.style.transform = 'scale(1)';
+                    }, 2000);
+                    
+                } catch (error) {
+                    // エラー時の視覚的フィードバック
+                    const originalText = elements.copyBtn.innerHTML;
+                    const originalClass = elements.copyBtn.className;
+                    
+                    elements.copyBtn.innerHTML = '❌ コピー失敗';
+                    elements.copyBtn.className = originalClass.replace('bg-green-600', 'bg-red-600').replace('hover:bg-green-700', 'hover:bg-red-700');
+                    elements.copyBtn.style.transform = 'scale(1.05)';
+                    elements.copyBtn.style.transition = 'all 0.2s ease';
+                    
+                    setTimeout(() => {
+                        elements.copyBtn.innerHTML = originalText;
+                        elements.copyBtn.className = originalClass;
+                        elements.copyBtn.style.transform = 'scale(1)';
+                    }, 2000);
+                }
+            });
         }
 
         function downloadJSON() {
@@ -652,8 +723,7 @@
                 examResults: {
                     date: document.getElementById('examDate').value,
                     examName: document.getElementById('examName').value,
-                    subjects: [],
-                    other: document.getElementById('examOther').value
+                    subjects: []
                 },
                 examSchedule: document.getElementById('examSchedule').value,
                 studyTime: {
@@ -700,7 +770,13 @@
                     }
 
                     populateForm(jsonData);
-                    alert(`データを読み込みました。\n生徒名: ${jsonData.studentName || '未入力'}`);
+                    
+                    // 自動でプロフィール生成を実行
+                    setTimeout(() => {
+                        generateProfile();
+                    }, 100); // フォーム更新後に実行
+                    
+                    alert(`データを読み込み、プロフィールを自動生成しました。\n生徒名: ${jsonData.studentName || '未入力'}`);
                     
                 } catch (error) {
                     alert('ファイルの読み込みに失敗しました。正しいJSONファイルを選択してください。');
@@ -744,7 +820,6 @@
             if (data.examResults) {
                 document.getElementById('examDate').value = data.examResults.date || '';
                 document.getElementById('examName').value = data.examResults.examName || '';
-                document.getElementById('examOther').value = data.examResults.other || '';
                 
                 // Clear existing exam subjects and add from data
                 elements.examSubjects.innerHTML = '';
@@ -886,6 +961,12 @@
 
         // Initialize the form
         handleSchoolTypeChange();
+        
+        // テキストエリアの手動入力時にも自動リサイズを適用
+        elements.generatedText.addEventListener('input', autoResizeTextarea);
+        elements.generatedText.addEventListener('paste', () => {
+            setTimeout(autoResizeTextarea, 10);
+        });
     </script>
 </body>
 </html>
