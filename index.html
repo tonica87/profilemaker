@@ -6,306 +6,954 @@
     <title>生徒プロフィール作成ツール</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .icon {
-            width: 16px;
-            height: 16px;
-            display: inline-block;
-            vertical-align: middle;
+        /* カスタムCSS */
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #f97316;
+            --success-color: #16a34a;
+            --warning-color: #eab308;
+            --error-color: #dc2626;
+            --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --shadow-soft: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-medium: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-large: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            box-shadow: var(--shadow-large);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+        }
+
+        .header-section {
+            background: var(--gradient-1);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="%23ffffff" fill-opacity="0.1"><circle cx="30" cy="30" r="2"/></g></svg>') repeat;
+            opacity: 0.3;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .file-upload-section {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 1.5rem;
+            margin: -1px;
+            margin-bottom: 2rem;
+            border-radius: 16px;
+            box-shadow: var(--shadow-medium);
+        }
+
+        .file-upload-btn {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .file-upload-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .form-section {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-soft);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .form-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-2);
+        }
+
+        .form-section:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .orange-section .section-icon { background: #fed7aa; }
+        .blue-section .section-icon { background: #bfdbfe; }
+        .green-section .section-icon { background: #bbf7d0; }
+        .yellow-section .section-icon { background: #fef3c7; }
+        .purple-section .section-icon { background: #e9d5ff; }
+        .red-section .section-icon { background: #fecaca; }
+        .indigo-section .section-icon { background: #c7d2fe; }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .form-input:hover {
+            border-color: #d1d5db;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: var(--gradient-1);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #6b7280;
+            border: 2px solid #e5e7eb;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-secondary:hover {
+            background: #f9fafb;
+            border-color: #d1d5db;
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(22, 163, 74, 0.3);
+        }
+
+        .radio-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 8px;
+        }
+
+        .radio-item {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .radio-item:hover {
+            background: #f3f4f6;
+        }
+
+        .radio-item input[type="radio"] {
+            margin-right: 8px;
+            transform: scale(1.2);
+        }
+
+        .radio-item input[type="radio"]:checked + span {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .dynamic-subject {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .dynamic-subject:hover {
+            border-color: #cbd5e1;
+            background: #f1f5f9;
+        }
+
+        .subject-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .subject-name {
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .delete-btn {
+            color: #ef4444;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .add-subject-container {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .add-subject-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 16px;
+        }
+
+        .add-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .add-btn:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        .result-section {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: var(--shadow-soft);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            min-height: 500px;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f3f4f6;
+        }
+
+        .result-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .copy-btn {
+            background: var(--gradient-3);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .copy-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(79, 172, 254, 0.3);
+        }
+
+        .usage-info {
+            background: linear-gradient(135deg, #dbeafe 0%, #e0f2fe 100%);
+            border: 1px solid #bfdbfe;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .usage-info ul {
+            margin: 0;
+            padding-left: 16px;
+            color: #1e40af;
+        }
+
+        .usage-info li {
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .result-textarea {
+            width: 100%;
+            min-height: 400px;
+            padding: 20px;
+            border: 2px solid #f3f4f6;
+            border-radius: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: vertical;
+            background: #fafbfc;
+            color: #374151;
+        }
+
+        .result-textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .placeholder-text {
+            text-align: center;
+            color: #9ca3af;
+            font-size: 16px;
+            padding: 60px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .placeholder-icon {
+            font-size: 48px;
+            opacity: 0.5;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 16px;
+            margin-top: 2rem;
+        }
+
+        .button-group button {
+            flex: 1;
+        }
+
+        /* アニメーション */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-section {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .form-section:nth-child(1) { animation-delay: 0.1s; }
+        .form-section:nth-child(2) { animation-delay: 0.2s; }
+        .form-section:nth-child(3) { animation-delay: 0.3s; }
+        .form-section:nth-child(4) { animation-delay: 0.4s; }
+        .form-section:nth-child(5) { animation-delay: 0.5s; }
+        .form-section:nth-child(6) { animation-delay: 0.6s; }
+        .form-section:nth-child(7) { animation-delay: 0.7s; }
+
+        /* レスポンシブデザイン */
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-title {
+                font-size: 2rem;
+            }
+            
+            body {
+                padding: 10px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+            
+            .radio-group {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .add-subject-container {
+                flex-direction: column;
+            }
+            
+            .header-title {
+                font-size: 1.8rem;
+            }
+            
+            .form-section {
+                padding: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .grid-3 {
+                grid-template-columns: 1fr;
+            }
+            
+            .result-header {
+                flex-direction: column;
+                gap: 12px;
+                align-items: stretch;
+            }
+        }
+
+        /* ローディング状態 */
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+            position: relative;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* カスタムスクロールバー */
+        .result-textarea::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .result-textarea::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+
+        .result-textarea::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .result-textarea::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* フォーカス状態の改善 */
+        .form-input:focus,
+        .form-textarea:focus,
+        .result-textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        /* ホバー効果の追加 */
+        .form-section:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        /* 成功・エラー状態 */
+        .success-message {
+            background: #dcfce7;
+            color: #166534;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid #bbf7d0;
+            margin-bottom: 16px;
+        }
+
+        .error-message {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid #fca5a5;
+            margin-bottom: 16px;
         }
     </style>
 </head>
-<body class="bg-gray-100">
-    <div class="max-w-6xl mx-auto p-6 bg-white">
-        <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-800 mb-2">生徒プロフィール作成ツール</h1>
-            <p class="text-gray-600 mb-4">入力された情報を整理して、指定のテンプレートに沿った文章を自動生成します</p>
-            
-            <div class="bg-gray-100 p-4 rounded-lg">
+<body>
+    <div class="max-w-7xl mx-auto">
+        <div class="main-container">
+            <!-- ヘッダーセクション -->
+            <div class="header-section">
+                <div class="header-content">
+                    <h1 class="header-title">🎓 生徒プロフィール作成ツール</h1>
+                    <p class="header-subtitle">入力された情報を整理して、指定のテンプレートに沿った文章を自動生成します</p>
+                </div>
+            </div>
+
+            <!-- ファイルアップロードセクション -->
+            <div class="file-upload-section">
                 <div class="flex items-center gap-4">
-                    <label class="flex items-center cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                    <label class="file-upload-btn">
                         📁 JSONファイルを読み込み
                         <input type="file" accept=".json" id="jsonFileInput" class="hidden" />
                     </label>
-                    <span class="text-sm text-gray-600">
+                    <span class="text-sm opacity-90">
                         保存した生徒プロフィールのファイルを読み込んで編集ができます
                     </span>
                 </div>
             </div>
-        </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div class="space-y-6">
-                <!-- 1. 生徒名 -->
-                <div class="bg-orange-50 p-6 rounded-lg">
-                    <h2 class="text-xl font-semibold mb-4 text-orange-800">生徒名</h2>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">生徒氏名</label>
-                            <input type="text" id="studentName" placeholder="例: 武田塾花子" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">特訓種別・科目</label>
-                            <input type="text" id="trainingType" placeholder="個別S英語" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">担当</label>
-                            <input type="text" id="instructor" placeholder="担当名を入力" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" />
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 2. 基本情報 -->
-                <div class="bg-blue-50 p-6 rounded-lg">
-                    <h2 class="text-xl font-semibold mb-4 text-blue-800">基本情報</h2>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">学年</label>
-                            <select id="grade" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                <option value="">選択してください</option>
-                                <option value="既卒">既卒</option>
-                                <option value="高校3年生">高校3年生</option>
-                                <option value="高校2年生">高校2年生</option>
-                                <option value="高校1年生">高校1年生</option>
-                                <option value="中学3年生">中学3年生</option>
-                                <option value="中学2年生">中学2年生</option>
-                                <option value="中学1年生">中学1年生</option>
-                                <option value="その他">その他</option>
-                                <option value="学年を記載しない">学年を記載しない</option>
-                            </select>
-                            <div id="gradeOtherDiv" class="mt-2 hidden">
-                                <input type="text" id="gradeOther" placeholder="学年を入力してください" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">学校区分</label>
-                            <div class="flex flex-wrap gap-4">
-                                <label class="flex items-center">
-                                    <input type="radio" name="schoolType" value="出身校" checked class="mr-2" />
-                                    出身校
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="radio" name="schoolType" value="在籍校" class="mr-2" />
-                                    在籍校
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="radio" name="schoolType" value="学校を記載しない" class="mr-2" />
-                                    学校を記載しない
-                                </label>
-                            </div>
-                        </div>
-                        <div id="schoolDiv">
-                            <label class="block text-sm font-medium text-gray-700 mb-1" id="schoolLabel">出身校</label>
-                            <input type="text" id="school" placeholder="例: 都立上野高校" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">受験科目（得意な順番で）</label>
-                            <input type="text" id="subjects" placeholder="例: 英語>日本史>国語(現古漢)" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 3. 志望校 -->
-                <div class="bg-green-50 p-6 rounded-lg">
-                    <h2 class="text-xl font-semibold mb-4 text-green-800">志望校</h2>
-                    <p class="text-sm text-green-700 mb-4">可能な限り学部学科まで</p>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">第一志望群</label>
-                            <input type="text" id="firstChoice" placeholder="例: 早稲田大学文化構想学部" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">第二志望群</label>
-                            <input type="text" id="secondChoice" placeholder="例: 中央大学文学部" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">第三志望群</label>
-                            <input type="text" id="thirdChoice" placeholder="例: 日本大学文理学部" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" />
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 4. 月別学習到達目標 -->
-                <div class="bg-yellow-50 p-6 rounded-lg">
-                    <h2 class="text-xl font-semibold mb-4 text-yellow-800">月別学習到達目標</h2>
-                    <p class="text-sm text-yellow-700 mb-4">○月○週目のように細かく書きたい場合は一度プロフィール作成してから手打ちで修正してください<br />すべての月の目標を記入しなくても大丈夫ですが、段階突破目標は最低限記入してください</p>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">2月末</label>
-                            <input type="text" id="february" placeholder="例: 参考書の完成や段階突破、模試の偏差値など" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">3月末</label>
-                            <input type="text" id="march" placeholder="例: 参考書の完成や段階突破、模試の偏差値など" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">4月末</label>
-                            <input type="text" id="april" placeholder="例: 参考書の完成や段階突破、模試の偏差値など" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">5月末</label>
-                            <input type="text" id="may" placeholder="例: 参考書の完成や段階突破、模試の偏差値など" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">6月末</label>
-                            <input type="text" id="june" placeholder="例: 参考書の完成や段階突破、模試の偏差値など" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">7月末</label>
-                            <input type="text" id="july" placeholder="例: 参考書の完成や段階突破、模試の偏差値など" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">8月末</label>
-                            <input type="text" id="august" placeholder="例: 参考書の完成や段階突破、模試の偏差値など" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">9月末</label>
-                            <input type="text" id="september" placeholder="例: 参考書の完成や段階突破、模試の偏差値など" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">10月末</label>
-                            <input type="text" id="october" placeholder="例: 参考書の完成や段階突破、模試の偏差値など" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">11月末</label>
-                            <input type="text" id="november" placeholder="例: 参考書の完成や段階突破、模試の偏差値など" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">12月末</label>
-                            <input type="text" id="december" placeholder="例: 参考書の完成や段階突破、模試の偏差値など" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">1月末</label>
-                            <input type="text" id="january" placeholder="例: 参考書の完成や段階突破、模試の偏差値など" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500" />
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 5. 模試成績 -->
-                <div class="bg-purple-50 p-6 rounded-lg">
-                    <h2 class="text-xl font-semibold mb-4 text-purple-800">直近の模試の成績</h2>
-                    <div class="space-y-4">
-                        <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8">
+                <div class="space-y-6">
+                    <!-- 1. 生徒名 -->
+                    <div class="form-section orange-section">
+                        <h2 class="section-title">
+                            <span class="section-icon">👤</span>
+                            生徒名
+                        </h2>
+                        <div class="space-y-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">実施日</label>
-                                <input type="text" id="examDate" placeholder="例: 4/25" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                                <label class="form-label">生徒氏名</label>
+                                <input type="text" id="studentName" placeholder="例: 武田塾花子" class="form-input" />
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">模試名</label>
-                                <input type="text" id="examName" placeholder="例: 第2回全統共通テスト模試" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                                <label class="form-label">特訓種別・科目</label>
+                                <input type="text" id="trainingType" placeholder="個別S英語" class="form-input" />
+                            </div>
+                            <div>
+                                <label class="form-label">担当</label>
+                                <input type="text" id="instructor" placeholder="担当名を入力" class="form-input" />
                             </div>
                         </div>
-                        
-                        <div id="examSubjects">
-                            <div class="exam-subject mb-4">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-sm font-medium text-gray-700">英語</span>
-                                </div>
-                                <div class="grid grid-cols-3 gap-2">
-                                    <input type="text" placeholder="得点" class="subject-score px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" />
-                                    <input type="text" placeholder="満点" class="subject-total px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" />
-                                    <input type="text" placeholder="偏差値" class="subject-deviation px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                    </div>
+
+                    <!-- 2. 基本情報 -->
+                    <div class="form-section blue-section">
+                        <h2 class="section-title">
+                            <span class="section-icon">📋</span>
+                            基本情報
+                        </h2>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="form-label">学年</label>
+                                <select id="grade" class="form-input">
+                                    <option value="">選択してください</option>
+                                    <option value="既卒">既卒</option>
+                                    <option value="高校3年生">高校3年生</option>
+                                    <option value="高校2年生">高校2年生</option>
+                                    <option value="高校1年生">高校1年生</option>
+                                    <option value="中学3年生">中学3年生</option>
+                                    <option value="中学2年生">中学2年生</option>
+                                    <option value="中学1年生">中学1年生</option>
+                                    <option value="学年を記載しない">学年を記載しない</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label">学校区分</label>
+                                <div class="radio-group">
+                                    <label class="radio-item">
+                                        <input type="radio" name="schoolType" value="出身校" checked />
+                                        <span>出身校</span>
+                                    </label>
+                                    <label class="radio-item">
+                                        <input type="radio" name="schoolType" value="在籍校" />
+                                        <span>在籍校</span>
+                                    </label>
+                                    <label class="radio-item">
+                                        <input type="radio" name="schoolType" value="学校を記載しない" />
+                                        <span>学校を記載しない</span>
+                                    </label>
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="flex gap-2 mb-4">
-                            <input type="text" id="newSubject" placeholder="科目名を入力" class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" />
-                            <button type="button" id="addSubjectBtn" class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors">追加</button>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">その他科目</label>
-                            <textarea id="examOther" placeholder="その他の科目がある場合は記入" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" rows="2"></textarea>
+                            <div id="schoolDiv">
+                                <label class="form-label" id="schoolLabel">出身校</label>
+                                <input type="text" id="school" placeholder="例: 都立上野高校" class="form-input" />
+                            </div>
+                            <div>
+                                <label class="form-label">受験科目（得意な順番で）</label>
+                                <input type="text" id="subjects" placeholder="例: 英語>日本史>国語(現古漢)" class="form-input" />
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- 6. 試験日程 -->
-                <div class="bg-red-50 p-6 rounded-lg">
-                    <h2 class="text-xl font-semibold mb-4 text-red-800">試験日程</h2>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">模擬試験/英検等の日程</label>
-                        <textarea id="examSchedule" placeholder="例:&#10;6/28 駿台ベネッセ模試&#10;8/24 河合塾全統マーク模試&#10;8/31 河合塾全統記述模試" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500" rows="4"></textarea>
+                    <!-- 3. 志望校 -->
+                    <div class="form-section green-section">
+                        <h2 class="section-title">
+                            <span class="section-icon">🎯</span>
+                            志望校
+                        </h2>
+                        <p class="text-sm text-green-700 mb-4">可能な限り学部学科まで</p>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="form-label">第一志望群</label>
+                                <input type="text" id="firstChoice" placeholder="例: 早稲田大学文化構想学部" class="form-input" />
+                            </div>
+                            <div>
+                                <label class="form-label">第二志望群</label>
+                                <input type="text" id="secondChoice" placeholder="例: 中央大学文学部" class="form-input" />
+                            </div>
+                            <div>
+                                <label class="form-label">第三志望群</label>
+                                <input type="text" id="thirdChoice" placeholder="例: 日本大学文理学部" class="form-input" />
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                <!-- 7. スケジューリング -->
-                <div class="bg-indigo-50 p-6 rounded-lg">
-                    <h2 class="text-xl font-semibold mb-4 text-indigo-800">1日のスケジューリング</h2>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">各科目の目標勉強時間</label>
+                    <!-- 4. 月別学習到達目標 -->
+                    <div class="form-section yellow-section">
+                        <h2 class="section-title">
+                            <span class="section-icon">📅</span>
+                            月別学習到達目標
+                        </h2>
+                        <p class="text-sm text-yellow-700 mb-4">○月○週目のように細かく書きたい場合は一度プロフィール作成してから手打ちで修正してください<br />すべての月の目標を記入しなくても大丈夫ですが、段階突破目標は最低限記入してください</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="form-label">2月末</label>
+                                <input type="text" id="february" placeholder="例: 参考書の完成や段階突破、模試の偏差値など" class="form-input" />
+                            </div>
+                            <div>
+                                <label class="form-label">3月末</label>
+                                <input type="text" id="march" placeholder="例: 参考書の完成や段階突破、模試の偏差値など" class="form-input" />
+                            </div>
+                            <div>
+                                <label class="form-label">4月末</label>
+                                <input type="text" id="april" placeholder="例: 参考書の完成や段階突破、模試の偏差値など" class="form-input" />
+                            </div>
+                            <div>
+                                <label class="form-label">5月末</label>
+                                <input type="text" id="may" placeholder="例: 参考書の完成や段階突破、模試の偏差値など" class="form-input" />
+                            </div>
+                            <div>
+                                <label class="form-label">6月末</label>
+                                <input type="text" id="june" placeholder="例: 参考書の完成や段階突破、模試の偏差値など" class="form-input" />
+                            </div>
+                            <div>
+                                <label class="form-label">7月末</label>
+                                <input type="text" id="july" placeholder="例: 参考書の完成や段階突破、模試の偏差値など" class="form-input" />
+                            </div>
+                            <div>
+                                <label class="form-label">8月末</label>
+                                <input type="text" id="august" placeholder="例: 参考書の完成や段階突破、模試の偏差値など" class="form-input" />
+                            </div>
+                            <div>
+                                <label class="form-label">9月末</label>
+                                <input type="text" id="september" placeholder="例: 参考書の完成や段階突破、模試の偏差値など" class="form-input" />
+                            </div>
+                            <div>
+                                <label class="form-label">10月末</label>
+                                <input type="text" id="october" placeholder="例: 参考書の完成や段階突破、模試の偏差値など" class="form-input" />
+                            </div>
+                            <div>
+                                <label class="form-label">11月末</label>
+                                <input type="text" id="november" placeholder="例: 参考書の完成や段階突破、模試の偏差値など" class="form-input" />
+                            </div>
+                            <div>
+                                <label class="form-label">12月末</label>
+                                <input type="text" id="december" placeholder="例: 参考書の完成や段階突破、模試の偏差値など" class="form-input" />
+                            </div>
+                            <div>
+                                <label class="form-label">1月末</label>
+                                <input type="text" id="january" placeholder="例: 参考書の完成や段階突破、模試の偏差値など" class="form-input" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 5. 模試成績 -->
+                    <div class="form-section purple-section">
+                        <h2 class="section-title">
+                            <span class="section-icon">📊</span>
+                            直近の模試の成績
+                        </h2>
+                        <div class="space-y-4">
+                            <div class="grid-2">
+                                <div>
+                                    <label class="form-label">実施日</label>
+                                    <input type="text" id="examDate" placeholder="例: 4/25" class="form-input" />
+                                </div>
+                                <div>
+                                    <label class="form-label">模試名</label>
+                                    <input type="text" id="examName" placeholder="例: 第2回全統共通テスト模試" class="form-input" />
+                                </div>
+                            </div>
                             
-                            <div id="studySubjects">
-                                <div class="study-subject mb-4">
-                                    <div class="flex items-center justify-between mb-2">
-                                        <span class="text-sm font-medium text-gray-700">英語</span>
+                            <div id="examSubjects">
+                                <div class="dynamic-subject">
+                                    <div class="subject-header">
+                                        <span class="subject-name">英語</span>
                                     </div>
-                                    <div class="flex items-center gap-2">
-                                        <input type="text" placeholder="4" class="study-hours w-20 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-                                        <span class="text-gray-600">時間</span>
+                                    <div class="grid-3">
+                                        <input type="text" placeholder="得点" class="form-input subject-score" />
+                                        <input type="text" placeholder="満点" class="form-input subject-total" />
+                                        <input type="text" placeholder="偏差値" class="form-input subject-deviation" />
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="flex gap-2 mb-4">
-                                <input type="text" id="newStudySubject" placeholder="科目名を入力" class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-                                <button type="button" id="addStudySubjectBtn" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors">追加</button>
+                            <div class="add-subject-container">
+                                <input type="text" id="newSubject" placeholder="科目名を入力" class="add-subject-input" />
+                                <button type="button" id="addSubjectBtn" class="add-btn">追加</button>
                             </div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">起床時間</label>
-                                <input type="text" id="wakeTime" placeholder="7:30" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">就寝時間</label>
-                                <input type="text" id="sleepTime" placeholder="23:30" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">スケジュールを記入</label>
-                            <textarea id="schedule" placeholder="例:&#10;6:30 起床&#10;7:00-8:00 朝食・準備&#10;8:00-12:00 午前学習&#10;12:00-13:00 昼食・休憩" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-y" rows="4"></textarea>
                         </div>
                     </div>
-                </div>
 
-                <div class="flex space-x-4">
-                    <button id="generateBtn" class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold">
-                        プロフィール作成
-                    </button>
-                    <button id="downloadBtn" class="flex items-center justify-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-                        💾 ダウンロード
-                    </button>
-                    <button id="clearBtn" class="flex items-center justify-center px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                        🔄 クリア
-                    </button>
-                </div>
-            </div>
+                    <!-- 6. 模擬試験/英検等の日程 -->
+                    <div class="form-section red-section">
+                        <h2 class="section-title">
+                            <span class="section-icon">📆</span>
+                            模擬試験/英検等の日程
+                        </h2>
+                        <div>
+                            <label class="form-label">模擬試験/英検等の日程</label>
+                            <textarea id="examSchedule" placeholder="例:&#10;6/28 駿台ベネッセ模試&#10;8/24 河合塾全統マーク模試&#10;8/31 河合塾全統記述模試" class="form-input form-textarea" rows="4"></textarea>
+                        </div>
+                    </div>
 
-            <div class="space-y-6">
-                <div class="bg-gray-50 p-6 rounded-lg">
-                    <div class="flex items-center justify-between mb-4">
-                        <h2 class="text-xl font-semibold text-gray-800">作成されたプロフィール</h2>
-                        <button id="copyBtn" class="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors hidden">
-                            📋 コピー
+                    <!-- 7. スケジューリング -->
+                    <div class="form-section indigo-section">
+                        <h2 class="section-title">
+                            <span class="section-icon">⏰</span>
+                            1日のスケジューリング
+                        </h2>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="form-label">各科目の目標勉強時間</label>
+                                
+                                <div id="studySubjects">
+                                    <div class="dynamic-subject">
+                                        <div class="subject-header">
+                                            <span class="subject-name">英語</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <input type="text" placeholder="4" class="form-input study-hours w-20" />
+                                            <span class="text-gray-600">時間</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="add-subject-container">
+                                    <input type="text" id="newStudySubject" placeholder="科目名を入力" class="add-subject-input" />
+                                    <button type="button" id="addStudySubjectBtn" class="add-btn">追加</button>
+                                </div>
+                            </div>
+
+                            <div class="grid-2">
+                                <div>
+                                    <label class="form-label">起床時間</label>
+                                    <input type="text" id="wakeTime" placeholder="7:30" class="form-input" />
+                                </div>
+                                <div>
+                                    <label class="form-label">就寝時間</label>
+                                    <input type="text" id="sleepTime" placeholder="23:30" class="form-input" />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="form-label">スケジュールを記入</label>
+                                <textarea id="schedule" placeholder="例:&#10;6:30 起床&#10;7:00-8:00 朝食・準備&#10;8:00-12:00 午前学習&#10;12:00-13:00 昼食・休憩" class="form-input form-textarea" rows="4"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button id="generateBtn" class="btn-primary">
+                            ✨ プロフィール作成
+                        </button>
+                        <button id="downloadBtn" class="btn-success">
+                            💾 ダウンロード
+                        </button>
+                        <button id="clearBtn" class="btn-secondary">
+                            🔄 クリア
                         </button>
                     </div>
-                    <div id="usage-info" class="bg-blue-50 p-3 rounded-lg mb-4 hidden">
-                        <ul class="text-sm text-blue-700 space-y-1">
-                            <li>• 作成されたテキストは直接編集可能です</li>
-                            <li>• 「コピー」ボタンでクリップボードにコピーできます</li>
-                            <li>• 必要に応じて手動で調整・追記してください</li>
-                            <li>• 模試結果や学習進捗に応じて定期的に更新してください</li>
-                        </ul>
-                    </div>
-                    <div class="bg-white p-4 rounded-lg border min-h-96">
-                        <textarea id="generatedText" class="w-full h-96 p-3 text-sm text-gray-800 font-mono leading-relaxed border-none resize-none focus:outline-none hidden" placeholder="作成されたプロフィールがここに表示されます"></textarea>
-                        <p id="placeholder-text" class="text-gray-500 text-center py-8">
-                            左側のフォームに入力して「プロフィール作成」ボタンを押してください
-                        </p>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="result-section">
+                        <div class="result-header">
+                            <h2 class="result-title">📄 作成されたプロフィール</h2>
+                            <button id="copyBtn" class="copy-btn hidden">
+                                📋 コピー
+                            </button>
+                        </div>
+                        <div id="usage-info" class="usage-info hidden">
+                            <ul>
+                                <li>• 作成されたテキストは直接編集可能です</li>
+                                <li>• 「コピー」ボタンでクリップボードにコピーできます</li>
+                                <li>• 必要に応じて手動で調整・追記してください</li>
+                                <li>• 模試結果や学習進捗に応じて定期的に更新してください</li>
+                            </ul>
+                        </div>
+                        <div class="bg-white rounded-lg border min-h-96">
+                            <textarea id="generatedText" class="result-textarea hidden" placeholder="作成されたプロフィールがここに表示されます"></textarea>
+                            <div id="placeholder-text" class="placeholder-text">
+                                <div class="placeholder-icon">📝</div>
+                                <p>左側のフォームに入力して<br>「プロフィール作成」ボタンを押してください</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -319,15 +967,7 @@
             studySubjects: [{ name: '英語', hours: '' }]
         };
 
-        // 学年選択の処理
-        document.getElementById('grade').addEventListener('change', function() {
-            const gradeOtherDiv = document.getElementById('gradeOtherDiv');
-            if (this.value === 'その他') {
-                gradeOtherDiv.classList.remove('hidden');
-            } else {
-                gradeOtherDiv.classList.add('hidden');
-            }
-        });
+        // 学年選択の処理（不要になったため削除）
 
         // 学校区分の処理
         document.querySelectorAll('input[name="schoolType"]').forEach(radio => {
@@ -375,16 +1015,16 @@
             
             formData.examSubjects.forEach((subject, index) => {
                 const div = document.createElement('div');
-                div.className = 'exam-subject mb-4';
+                div.className = 'dynamic-subject';
                 div.innerHTML = `
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-sm font-medium text-gray-700">${subject.name}</span>
-                        ${formData.examSubjects.length > 1 ? `<button type="button" onclick="removeExamSubject(${index})" class="text-red-600 hover:text-red-800 text-sm">削除</button>` : ''}
+                    <div class="subject-header">
+                        <span class="subject-name">${subject.name}</span>
+                        ${formData.examSubjects.length > 1 ? `<button type="button" onclick="removeExamSubject(${index})" class="delete-btn">削除</button>` : ''}
                     </div>
-                    <div class="grid grid-cols-3 gap-2">
-                        <input type="text" placeholder="得点" value="${subject.score}" onchange="updateExamSubject(${index}, 'score', this.value)" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" />
-                        <input type="text" placeholder="満点" value="${subject.total}" onchange="updateExamSubject(${index}, 'total', this.value)" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" />
-                        <input type="text" placeholder="偏差値" value="${subject.deviation}" onchange="updateExamSubject(${index}, 'deviation', this.value)" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                    <div class="grid-3">
+                        <input type="text" placeholder="得点" value="${subject.score}" onchange="updateExamSubject(${index}, 'score', this.value)" class="form-input" />
+                        <input type="text" placeholder="満点" value="${subject.total}" onchange="updateExamSubject(${index}, 'total', this.value)" class="form-input" />
+                        <input type="text" placeholder="偏差値" value="${subject.deviation}" onchange="updateExamSubject(${index}, 'deviation', this.value)" class="form-input" />
                     </div>
                 `;
                 container.appendChild(div);
@@ -397,4 +1037,359 @@
             container.innerHTML = '';
             
             formData.studySubjects.forEach((subject, index) => {
-                const div = document.createElement
+                const div = document.createElement('div');
+                div.className = 'dynamic-subject';
+                div.innerHTML = `
+                    <div class="subject-header">
+                        <span class="subject-name">${subject.name}</span>
+                        ${formData.studySubjects.length > 1 ? `<button type="button" onclick="removeStudySubject(${index})" class="delete-btn">削除</button>` : ''}
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="text" placeholder="4" value="${subject.hours}" onchange="updateStudySubject(${index}, 'hours', this.value)" class="form-input w-20" />
+                        <span class="text-gray-600">時間</span>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // 模試科目の更新
+        function updateExamSubject(index, field, value) {
+            formData.examSubjects[index][field] = value;
+        }
+
+        // 勉強科目の更新
+        function updateStudySubject(index, field, value) {
+            formData.studySubjects[index][field] = value;
+        }
+
+        // 模試科目の削除
+        function removeExamSubject(index) {
+            formData.examSubjects.splice(index, 1);
+            renderExamSubjects();
+        }
+
+        // 勉強科目の削除
+        function removeStudySubject(index) {
+            formData.studySubjects.splice(index, 1);
+            renderStudySubjects();
+        }
+
+        // プロフィール生成
+        document.getElementById('generateBtn').addEventListener('click', function() {
+            const btn = this;
+            btn.classList.add('loading');
+            btn.textContent = '生成中...';
+            
+            setTimeout(() => {
+                generateProfile();
+                btn.classList.remove('loading');
+                btn.innerHTML = '✨ プロフィール作成';
+            }, 1000);
+        });
+
+        function generateProfile() {
+            // フォーム値の取得
+            const studentName = document.getElementById('studentName').value;
+            const trainingType = document.getElementById('trainingType').value;
+            const instructor = document.getElementById('instructor').value;
+            
+            let grade = document.getElementById('grade').value;
+            
+            const schoolType = document.querySelector('input[name="schoolType"]:checked').value;
+            const school = document.getElementById('school').value;
+            const subjects = document.getElementById('subjects').value;
+            
+            const firstChoice = document.getElementById('firstChoice').value;
+            const secondChoice = document.getElementById('secondChoice').value;
+            const thirdChoice = document.getElementById('thirdChoice').value;
+            
+            // 月別目標
+            const months = ['february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december', 'january'];
+            const monthNames = ['2月末', '3月末', '4月末', '5月末', '6月末', '7月末', '8月末', '9月末', '10月末', '11月末', '12月末', '1月末'];
+            
+            // 模試情報
+            const examDate = document.getElementById('examDate').value;
+            const examName = document.getElementById('examName').value;
+            
+            // スケジュール情報
+            const wakeTime = document.getElementById('wakeTime').value;
+            const sleepTime = document.getElementById('sleepTime').value;
+            const schedule = document.getElementById('schedule').value;
+            const examSchedule = document.getElementById('examSchedule').value;
+            
+            // プロフィール文章の生成
+            let profile = '';
+            
+            // 基本情報部分
+            if (studentName) {
+                profile += `生徒氏名: ${studentName}\n`;
+            }
+            if (trainingType) {
+                profile += `特訓種別・科目: ${trainingType}\n`;
+            }
+            if (instructor) {
+                profile += `担当: ${instructor}\n`;
+            }
+            
+            profile += '\n◆基本情報\n';
+            
+            if (grade && grade !== '学年を記載しない') {
+                profile += `学年: ${grade}\n`;
+            }
+            
+            if (schoolType !== '学校を記載しない' && school) {
+                profile += `${schoolType}: ${school}\n`;
+            }
+            
+            if (subjects) {
+                profile += `受験科目: ${subjects}\n`;
+            }
+            
+            // 志望校部分
+            if (firstChoice || secondChoice || thirdChoice) {
+                profile += '\n◆志望校\n';
+                if (firstChoice) profile += `第一志望群: ${firstChoice}\n`;
+                if (secondChoice) profile += `第二志望群: ${secondChoice}\n`;
+                if (thirdChoice) profile += `第三志望群: ${thirdChoice}\n`;
+            }
+            
+            // 月別目標部分
+            let hasMonthlyGoals = false;
+            let monthlyGoalsText = '\n◆月別学習到達目標\n';
+            
+            months.forEach((month, index) => {
+                const value = document.getElementById(month).value;
+                if (value) {
+                    monthlyGoalsText += `${monthNames[index]}: ${value}\n`;
+                    hasMonthlyGoals = true;
+                }
+            });
+            
+            if (hasMonthlyGoals) {
+                profile += monthlyGoalsText;
+            }
+            
+            // 模試成績部分
+            if (examDate || examName || formData.examSubjects.some(s => s.score || s.total || s.deviation)) {
+                profile += '\n◆直近の模試成績\n';
+                if (examDate && examName) {
+                    profile += `${examDate} ${examName}\n`;
+                }
+                
+                formData.examSubjects.forEach(subject => {
+                    if (subject.score || subject.total || subject.deviation) {
+                        let subjectLine = `${subject.name}: `;
+                        if (subject.score && subject.total) {
+                            subjectLine += `${subject.score}/${subject.total}点`;
+                        }
+                        if (subject.deviation) {
+                            subjectLine += ` 偏差値${subject.deviation}`;
+                        }
+                        profile += subjectLine + '\n';
+                    }
+                });
+            }
+            
+            // 試験日程部分
+            if (examSchedule) {
+                profile += '\n◆模擬試験/英検等の日程\n';
+                profile += examSchedule + '\n';
+            }
+            
+            // スケジュール部分
+            let hasScheduleInfo = false;
+            let scheduleText = '\n◆1日のスケジューリング\n';
+            
+            // 目標勉強時間
+            const studyHours = formData.studySubjects.filter(s => s.hours).map(s => `${s.name}: ${s.hours}時間`);
+            if (studyHours.length > 0) {
+                scheduleText += '目標勉強時間: ' + studyHours.join(', ') + '\n';
+                hasScheduleInfo = true;
+            }
+            
+            if (wakeTime) {
+                scheduleText += `起床時間: ${wakeTime}\n`;
+                hasScheduleInfo = true;
+            }
+            
+            if (sleepTime) {
+                scheduleText += `就寝時間: ${sleepTime}\n`;
+                hasScheduleInfo = true;
+            }
+            
+            if (schedule) {
+                scheduleText += '\n◆詳細スケジュール\n';
+                scheduleText += schedule + '\n';
+                hasScheduleInfo = true;
+            }
+            
+            if (hasScheduleInfo) {
+                profile += scheduleText;
+            }
+            
+            // 結果の表示
+            const generatedText = document.getElementById('generatedText');
+            const placeholderText = document.getElementById('placeholder-text');
+            const copyBtn = document.getElementById('copyBtn');
+            const usageInfo = document.getElementById('usage-info');
+            
+            generatedText.value = profile;
+            generatedText.classList.remove('hidden');
+            placeholderText.style.display = 'none';
+            copyBtn.classList.remove('hidden');
+            usageInfo.classList.remove('hidden');
+        }
+
+        // コピー機能
+        document.getElementById('copyBtn').addEventListener('click', function() {
+            const generatedText = document.getElementById('generatedText');
+            generatedText.select();
+            document.execCommand('copy');
+            
+            const originalText = this.innerHTML;
+            this.innerHTML = '✅ コピー完了';
+            this.style.background = 'linear-gradient(135deg, #16a34a 0%, #22c55e 100%)';
+            
+            setTimeout(() => {
+                this.innerHTML = originalText;
+                this.style.background = 'var(--gradient-3)';
+            }, 2000);
+        });
+
+        // ダウンロード機能
+        document.getElementById('downloadBtn').addEventListener('click', function() {
+            const data = {
+                studentName: document.getElementById('studentName').value,
+                trainingType: document.getElementById('trainingType').value,
+                instructor: document.getElementById('instructor').value,
+                grade: document.getElementById('grade').value,
+                schoolType: document.querySelector('input[name="schoolType"]:checked').value,
+                school: document.getElementById('school').value,
+                subjects: document.getElementById('subjects').value,
+                firstChoice: document.getElementById('firstChoice').value,
+                secondChoice: document.getElementById('secondChoice').value,
+                thirdChoice: document.getElementById('thirdChoice').value,
+                examDate: document.getElementById('examDate').value,
+                examName: document.getElementById('examName').value,
+                wakeTime: document.getElementById('wakeTime').value,
+                sleepTime: document.getElementById('sleepTime').value,
+                schedule: document.getElementById('schedule').value,
+                examSchedule: document.getElementById('examSchedule').value,
+                examSubjects: formData.examSubjects,
+                studySubjects: formData.studySubjects
+            };
+            
+            // 月別目標も追加
+            const months = ['february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december', 'january'];
+            months.forEach(month => {
+                data[month] = document.getElementById(month).value;
+            });
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `student-profile-${data.studentName || 'unnamed'}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        // クリア機能
+        document.getElementById('clearBtn').addEventListener('click', function() {
+            if (confirm('すべての入力内容をクリアしますか？')) {
+                document.querySelectorAll('input, select, textarea').forEach(element => {
+                    if (element.type === 'radio') {
+                        element.checked = element.value === '出身校';
+                    } else {
+                        element.value = '';
+                    }
+                });
+                
+                formData.examSubjects = [{ name: '英語', score: '', total: '', deviation: '' }];
+                formData.studySubjects = [{ name: '英語', hours: '' }];
+                
+                renderExamSubjects();
+                renderStudySubjects();
+                
+                document.getElementById('generatedText').classList.add('hidden');
+                document.getElementById('placeholder-text').style.display = 'flex';
+                document.getElementById('copyBtn').classList.add('hidden');
+                document.getElementById('usage-info').classList.add('hidden');
+                document.getElementById('schoolDiv').classList.remove('hidden');
+            }
+        });
+
+        // JSONファイル読み込み機能
+        document.getElementById('jsonFileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        loadFormData(data);
+                    } catch (error) {
+                        alert('JSONファイルの読み込みに失敗しました。');
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        function loadFormData(data) {
+            // 基本情報の復元
+            if (data.studentName) document.getElementById('studentName').value = data.studentName;
+            if (data.trainingType) document.getElementById('trainingType').value = data.trainingType;
+            if (data.instructor) document.getElementById('instructor').value = data.instructor;
+            if (data.grade) document.getElementById('grade').value = data.grade;
+            if (data.school) document.getElementById('school').value = data.school;
+            if (data.subjects) document.getElementById('subjects').value = data.subjects;
+            
+            // 学校区分の復元
+            if (data.schoolType) {
+                document.querySelector(`input[name="schoolType"][value="${data.schoolType}"]`).checked = true;
+                document.querySelector(`input[name="schoolType"][value="${data.schoolType}"]`).dispatchEvent(new Event('change'));
+            }
+            
+            // 志望校の復元
+            if (data.firstChoice) document.getElementById('firstChoice').value = data.firstChoice;
+            if (data.secondChoice) document.getElementById('secondChoice').value = data.secondChoice;
+            if (data.thirdChoice) document.getElementById('thirdChoice').value = data.thirdChoice;
+            
+            // 月別目標の復元
+            const months = ['february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december', 'january'];
+            months.forEach(month => {
+                if (data[month]) document.getElementById(month).value = data[month];
+            });
+            
+            // 模試情報の復元
+            if (data.examDate) document.getElementById('examDate').value = data.examDate;
+            if (data.examName) document.getElementById('examName').value = data.examName;
+            
+            // スケジュール情報の復元
+            if (data.wakeTime) document.getElementById('wakeTime').value = data.wakeTime;
+            if (data.sleepTime) document.getElementById('sleepTime').value = data.sleepTime;
+            if (data.schedule) document.getElementById('schedule').value = data.schedule;
+            if (data.examSchedule) document.getElementById('examSchedule').value = data.examSchedule;
+            
+            // 科目データの復元
+            if (data.examSubjects) {
+                formData.examSubjects = data.examSubjects;
+                renderExamSubjects();
+            }
+            
+            if (data.studySubjects) {
+                formData.studySubjects = data.studySubjects;
+                renderStudySubjects();
+            }
+        }
+
+        // 初期化
+        renderExamSubjects();
+        renderStudySubjects();
+    </script>
+</body>
+</html>
